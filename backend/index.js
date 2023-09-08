@@ -1,9 +1,9 @@
 import express from "express";
+// mysql is a node.js driver for mysql. It is written in JavaScript, does not require compiling.
 import mysql from "mysql";
-
+import cors from "cors";
 // express is a Node.js web application framework that provides a robust set of features for web and mobile applications.
 const app = express();
-
 // Create a connection to the database
 const db = mysql.createConnection({
   // what is docker container ?
@@ -18,14 +18,11 @@ const db = mysql.createConnection({
 
 // express.json() is a method inbuilt in express to recognize the incoming Request Object as a JSON Object.
 app.use(express.json());
+app.use(cors());
 
 // get request to the root of the server
 app.get("/", (req, res) => {
-  const q = "SELECT * FROM test.Tables";
-  db.query(q, (err, data) => {
-    if (err) return res.json(err);
-    return res.json(data);
-  });
+  res.json("Hello this is the backend");
 });
 //  get request to the books table of the server
 app.get("/books", (req, res) => {
@@ -37,30 +34,45 @@ app.get("/books", (req, res) => {
 });
 // post request to the books table of the server
 app.post("/books", (req, res) => {
-  const q = "INSERT INTO books (`title`, `desc`, `cover`) VALUES (?)";
-  const values = [req.body.title, req.body.desc, req.body.cover];
+  const q = "INSERT INTO books (`title`, `desc`,`price` ,`cover`) VALUES (?)";
+  const values = [
+    req.body.title,
+    req.body.desc,
+    req.body.price,
+    req.body.cover,
+  ];
   // query to insert the data into the books table
   db.query(q, [values], (err, data) => {
     if (err) return res.json(err);
     return res.json("Book added successfully!!!");
   });
 });
+app.delete("/books/:id", (req, res) => {
+  const bookId = req.params.id;
+  const q = "DELETE FROM books WHERE id = ?";
 
-// app.get("/alter-user", (req, res) => {
-//   const alterQuery =
-//     "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Faisal143@'";
+  db.query(q, [bookId], (err, data) => {
+    if (err) return res.json(err);
+    return res.json("Book has been deleted successfully");
+  });
+});
+app.put("/books/:id", (req, res) => {
+  const bookId = req.params.id;
+  const q =
+    "UPDATE books SET `title`= ?, `desc`= ?, `price`=?, `cover`=? WHERE id = ?";
 
-//   db.query(alterQuery, (alterErr, alterResult) => {
-//     if (alterErr) {
-//       return res.json(alterErr);
-//     }
+  const values = [
+    req.body.title,
+    req.body.desc,
+    req.body.price,
+    req.body.cover,
+  ];
 
-//     // Alteration successful, provide a response
-//     return res.json({
-//       message: "User authentication method changed successfully.",
-//     });
-//   });
-// });
+  db.query(q, [...values, bookId], (err, data) => {
+    if (err) return res.json(err);
+    return res.json("Book has been updated successfully");
+  });
+});
 
 app.listen(8800, () => {
   console.log("Connected to backend!!!");
